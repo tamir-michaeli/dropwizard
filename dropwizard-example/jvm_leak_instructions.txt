@@ -1,0 +1,27 @@
+Prerequists:
+1. Dropwizard metrics dashboard.
+2. The following alert active on the Memory usage panel:\
+Conditions:  WHEN precent_diff() OF query(B,5m,now) IS ABOVE 30
+and query B is: avg_over_time(jvm_memory_total_used_gauge[5m])
+
+Instructions for creating jvm leak:
+1. Build/pull docker image and run:
+   docker run -p 8080:8080 -p 8081:8081 logzio/dropwizard-jvm-leak-demo
+
+2. Run telegraf with telegraf with telegraf.conf as configuration file (replace logzio token and )
+   you might get the following error:
+   "Error writing to outputs.http: Post "https://listener.logz.io:8053": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
+   this is ok, as long as you metrics in the dashboard.
+
+3. For the JVM leak - we intrested in the memory usage (heap). Let the app and telegraf run for about 30 min so we
+   see a pattern in the dashboard.
+
+4. run: curl 127.0.0.1:8080/jvm_leak/start
+   to start the JVM leak. This will cause the minimum and maximum heap memory in use be higher then before,
+   and the alert will trigger after a few minutes.
+
+Notes:
+1. Once the JVM leak is started, it cannot be undone without restarting the docker container.
+2. Port 8081 exposes the metrics, port 8080 exposes the server itself.
+
+
